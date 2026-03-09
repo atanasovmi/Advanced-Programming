@@ -39,5 +39,5 @@ def init_db() -> None:
     """
     # Import all models here so SQLAlchemy knows about them before
     # it tries to create the schema.
-    from app.models import recipe, ingredient, step, rating  # noqa: F401
+    from app.models import recipe, ingredient, step, rating, user, bookmark  # noqa: F401
     Base.metadata.create_all(bind=engine)
