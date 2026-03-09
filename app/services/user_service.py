@@ -1,35 +1,18 @@
-"""
-app/services/user_service.py
-
-Contains all business logic related to user accounts.
-
-The UserService class manages registration, authentication, and
-profile retrieval. It never touches the database directly in views;
-all calls go through this service.
-"""
+"""Contains business logic related to user accounts and shortlists."""
 
 from __future__ import annotations
 
 from typing import Optional
+
 from sqlalchemy.orm import Session
 
+from app.models.shortlist import Shortlist
 from app.models.user import User
-from app.models.bookmark import Bookmark
-from app.models.recipe import Recipe
+from app.models.venture import Venture
 
 
 class UserService:
-    """
-    Provides user account operations: registration, authentication,
-    profile lookups, and bookmark management.
-
-    All methods accept a SQLAlchemy Session as their first argument
-    so that the caller controls the transaction scope.
-    """
-
-    # ------------------------------------------------------------------
-    # Registration & authentication
-    # ------------------------------------------------------------------
+    """Provides registration, authentication, profile, and shortlist operations."""
 
     @staticmethod
     def register(
@@ -39,27 +22,10 @@ class UserService:
         password: str,
         bio: str = "",
     ) -> User:
-        """
-        Create a new user account.
-
-        Args:
-            db:       Active database session.
-            username: Unique display name (3–80 characters, alphanumeric +
-                      underscores only).
-            email:    Unique email address.
-            password: Plain-text password (min 6 characters).
-            bio:      Optional short self-description.
-
-        Returns:
-            The newly created and committed User object.
-
-        Raises:
-            ValueError: If any validation rule is violated or the
-                        username / email is already taken.
-        """
+        """Create and persist a new user account."""
         username = username.strip()
-        email    = email.strip().lower()
-        bio      = bio.strip()
+        email = email.strip().lower()
+        bio = bio.strip()
 
         if len(username) < 3:
             raise ValueError("Username must be at least 3 characters long.")
@@ -92,24 +58,13 @@ class UserService:
 
     @staticmethod
     def authenticate(db: Session, username: str, password: str) -> Optional[User]:
-        """
-        Return the User if *username* + *password* are valid, else None.
-
-        Args:
-            db:       Active database session.
-            username: The user's display name (case-sensitive).
-            password: Plain-text password to verify.
-        """
+        """Return the user if credentials are valid, else None."""
         user = db.query(User).filter(User.username == username).first()
         if user is None:
             return None
         if not User.verify_password(user.password_hash, password):
             return None
         return user
-
-    # ------------------------------------------------------------------
-    # Profile lookups
-    # ------------------------------------------------------------------
 
     @staticmethod
     def get_by_id(db: Session, user_id: int) -> Optional[User]:
@@ -123,12 +78,7 @@ class UserService:
 
     @staticmethod
     def update_bio(db: Session, user_id: int, bio: str) -> Optional[User]:
-        """
-        Update the bio text for the given user.
-
-        Returns:
-            The updated User, or None if no such user exists.
-        """
+        """Update the bio text for the given user."""
         user = db.query(User).filter(User.id == user_id).first()
         if user is None:
             return None
@@ -137,75 +87,58 @@ class UserService:
         db.refresh(user)
         return user
 
-    # ------------------------------------------------------------------
-    # Bookmark management
-    # ------------------------------------------------------------------
-
     @staticmethod
-    def add_bookmark(db: Session, user_id: int, recipe_id: int) -> Bookmark:
-        """
-        Bookmark *recipe_id* for *user_id*.
-
-        Returns:
-            The new (or existing) Bookmark object.
-
-        Raises:
-            ValueError: If either the user or recipe does not exist.
-        """
+    def add_shortlist(db: Session, user_id: int, venture_id: int) -> Shortlist:
+        """Add a venture brief to a user's shortlist."""
         if not db.query(User).filter(User.id == user_id).first():
             raise ValueError("User not found.")
-        if not db.query(Recipe).filter(Recipe.id == recipe_id).first():
-            raise ValueError("Recipe not found.")
+        if not db.query(Venture).filter(Venture.id == venture_id).first():
+            raise ValueError("Venture not found.")
 
         existing = (
-            db.query(Bookmark)
-            .filter(Bookmark.user_id == user_id, Bookmark.recipe_id == recipe_id)
+            db.query(Shortlist)
+            .filter(Shortlist.user_id == user_id, Shortlist.venture_id == venture_id)
             .first()
         )
         if existing:
             return existing
 
-        bm = Bookmark(user_id=user_id, recipe_id=recipe_id)
-        db.add(bm)
+        shortlist = Shortlist(user_id=user_id, venture_id=venture_id)
+        db.add(shortlist)
         db.commit()
-        db.refresh(bm)
-        return bm
+        db.refresh(shortlist)
+        return shortlist
 
     @staticmethod
-    def remove_bookmark(db: Session, user_id: int, recipe_id: int) -> bool:
-        """
-        Remove the bookmark for *recipe_id* from *user_id*'s collection.
-
-        Returns:
-            True if a bookmark was removed, False if none existed.
-        """
-        bm = (
-            db.query(Bookmark)
-            .filter(Bookmark.user_id == user_id, Bookmark.recipe_id == recipe_id)
+    def remove_shortlist(db: Session, user_id: int, venture_id: int) -> bool:
+        """Remove a venture brief from a user's shortlist."""
+        shortlist = (
+            db.query(Shortlist)
+            .filter(Shortlist.user_id == user_id, Shortlist.venture_id == venture_id)
             .first()
         )
-        if bm is None:
+        if shortlist is None:
             return False
-        db.delete(bm)
+        db.delete(shortlist)
         db.commit()
         return True
 
     @staticmethod
-    def is_bookmarked(db: Session, user_id: int, recipe_id: int) -> bool:
-        """Return True if the user has bookmarked the given recipe."""
+    def is_shortlisted(db: Session, user_id: int, venture_id: int) -> bool:
+        """Return True when the venture is already on the user's shortlist."""
         return (
-            db.query(Bookmark)
-            .filter(Bookmark.user_id == user_id, Bookmark.recipe_id == recipe_id)
+            db.query(Shortlist)
+            .filter(Shortlist.user_id == user_id, Shortlist.venture_id == venture_id)
             .first()
         ) is not None
 
     @staticmethod
-    def get_bookmarked_recipes(db: Session, user_id: int) -> list[Recipe]:
-        """Return all recipes bookmarked by the user, newest first."""
-        bookmarks = (
-            db.query(Bookmark)
-            .filter(Bookmark.user_id == user_id)
-            .order_by(Bookmark.created_at.desc())
+    def get_shortlisted_ventures(db: Session, user_id: int) -> list[Venture]:
+        """Return all shortlisted ventures for a user, newest first."""
+        shortlists = (
+            db.query(Shortlist)
+            .filter(Shortlist.user_id == user_id)
+            .order_by(Shortlist.created_at.desc())
             .all()
         )
-        return [bm.recipe for bm in bookmarks if bm.recipe is not None]
+        return [shortlist.venture for shortlist in shortlists if shortlist.venture is not None]

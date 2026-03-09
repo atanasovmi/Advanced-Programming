@@ -1,9 +1,4 @@
-"""
-Shared pytest fixtures for RecipeVault tests.
-
-Every test gets its own in-memory SQLite database so tests are
-completely isolated and do not affect the production ``cookbook.db``.
-"""
+"""Shared pytest fixtures for VentureCanvas tests."""
 
 import pytest
 from sqlalchemy import create_engine
@@ -11,22 +6,17 @@ from sqlalchemy.orm import sessionmaker
 
 from app.models.database import Base
 
-# Import all models so Base.metadata knows about them
+from app.models.milestone import Milestone  # noqa: F401
+from app.models.resource_need import ResourceNeed  # noqa: F401
+from app.models.review import Review  # noqa: F401
+from app.models.shortlist import Shortlist  # noqa: F401
 from app.models.user import User  # noqa: F401
-from app.models.recipe import Recipe  # noqa: F401
-from app.models.ingredient import Ingredient  # noqa: F401
-from app.models.step import Step  # noqa: F401
-from app.models.rating import Rating  # noqa: F401
-from app.models.bookmark import Bookmark  # noqa: F401
+from app.models.venture import Venture  # noqa: F401
 
 
 @pytest.fixture()
 def db():
-    """
-    Yield a SQLAlchemy Session backed by an in-memory SQLite database.
-
-    Tables are created fresh for every test and torn down afterwards.
-    """
+    """Yield an isolated in-memory SQLite database session for each test."""
     engine = create_engine(
         "sqlite:///:memory:",
         connect_args={"check_same_thread": False},
