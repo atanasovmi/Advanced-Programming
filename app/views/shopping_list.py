@@ -105,7 +105,7 @@ def shopping_list_page() -> None:
     # ------------------------------------------------------------------ #
     # Page layout                                                         #
     # ------------------------------------------------------------------ #
-    with page_layout("Shopping List — CookBook"):
+    with page_layout("Shopping List — RecipeVault"):
         ui.label("🛒 Shopping List Generator").classes("text-3xl font-bold")
         ui.label(
             "Select the recipes you want to cook and we'll combine "

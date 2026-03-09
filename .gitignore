@@ -26,6 +26,9 @@ env/
 # NiceGUI / FastAPI cache
 .nicegui/
 
+# Test cache
+.pytest_cache/
+
 # OS
 .DS_Store
 Thumbs.db

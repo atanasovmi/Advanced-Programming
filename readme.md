@@ -17,13 +17,13 @@ Think of it as a lightweight personal Allrecipes — where every recipe has an o
 
 ## 📸 Screenshots
 
-| Home — Recipe Grid | Recipe Detail with Bookmark |
+| Home — Recipe Grid | Recipe Detail |
 |---|---|
-| *(recipe cards showing author, rating, time)* | *(detail view with 🔖 Bookmark / Login-to-bookmark)* |
+| ![Home](docs/screenshots/home.png) | ![Recipe Detail](docs/screenshots/recipe_detail.png) |
 
-| Login / Register | User Profile |
+| Login | User Profile |
 |---|---|
-| *(clean auth forms)* | *(shows authored recipes + bookmarks)* |
+| ![Login](docs/screenshots/login.png) | ![Profile](docs/screenshots/profile.png) |
 
 ---
 
