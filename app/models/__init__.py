@@ -10,6 +10,8 @@ from app.models.recipe import Recipe, Category
 from app.models.ingredient import Ingredient
 from app.models.step import Step
 from app.models.rating import Rating
+from app.models.user import User
+from app.models.bookmark import Bookmark
 
 __all__ = [
     "Base",
@@ -21,4 +23,6 @@ __all__ = [
     "Ingredient",
     "Step",
     "Rating",
+    "User",
+    "Bookmark",
 ]

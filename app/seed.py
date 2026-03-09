@@ -1,17 +1,42 @@
 """
 app/seed.py
 
-Populates the database with sample recipes so that the application
-starts with useful demo data.
+Populates the database with sample data so that the application
+starts with useful demo content.
 
-This module is safe to call multiple times: it checks whether
-any recipes already exist and skips seeding if they do.
+On first run this module:
+  1. Creates two demo user accounts (alice and bob).
+  2. Inserts sample recipes attributed to those users.
+
+This module is safe to call multiple times: it checks whether any
+recipes already exist and skips seeding if they do.
 """
 
 from app.models.database import SessionLocal
 from app.models.recipe import Category
+from app.models.user import User
 from app.services.recipe_service import RecipeService
+from app.services.user_service import UserService
 
+
+# ---------------------------------------------------------------------------
+# Demo user definitions
+# ---------------------------------------------------------------------------
+
+SEED_USERS: list[dict] = [
+    {
+        "username": "alice",
+        "email":    "alice@example.com",
+        "password": "alice123",
+        "bio":      "Home cook & pasta enthusiast. I share the recipes I actually make.",
+    },
+    {
+        "username": "bob",
+        "email":    "bob@example.com",
+        "password": "bob12345",
+        "bio":      "Weekend baker and smoothie fan. Simplicity first.",
+    },
+]
 
 # ---------------------------------------------------------------------------
 # Sample recipe definitions
@@ -19,6 +44,7 @@ from app.services.recipe_service import RecipeService
 
 SEED_RECIPES: list[dict] = [
     {
+        "author": "alice",
         "title": "Classic Spaghetti Carbonara",
         "description": (
             "A rich and creamy Roman pasta dish made with eggs, "
@@ -51,6 +77,7 @@ SEED_RECIPES: list[dict] = [
         ],
     },
     {
+        "author": "bob",
         "title": "Fluffy Blueberry Pancakes",
         "description": (
             "Light, golden pancakes packed with juicy blueberries — "
@@ -85,6 +112,7 @@ SEED_RECIPES: list[dict] = [
         ],
     },
     {
+        "author": "alice",
         "title": "Avocado Toast with Poached Egg",
         "description": (
             "Creamy smashed avocado on toasted sourdough topped with "
@@ -95,13 +123,13 @@ SEED_RECIPES: list[dict] = [
         "prep_time": 5,
         "cook_time": 10,
         "ingredients": [
-            {"name": "Sourdough bread", "amount": 2,  "unit": "slices"},
-            {"name": "Avocado",        "amount": 1,  "unit": "pcs"},
-            {"name": "Eggs",           "amount": 2,  "unit": "pcs"},
-            {"name": "Lemon juice",    "amount": 1,  "unit": "tbsp"},
-            {"name": "Chilli flakes",  "amount": 0.5,"unit": "tsp"},
-            {"name": "Salt",           "amount": 1,  "unit": "pinch"},
-            {"name": "Olive oil",      "amount": 1,  "unit": "tbsp"},
+            {"name": "Sourdough bread", "amount": 2,   "unit": "slices"},
+            {"name": "Avocado",         "amount": 1,   "unit": "pcs"},
+            {"name": "Eggs",            "amount": 2,   "unit": "pcs"},
+            {"name": "Lemon juice",     "amount": 1,   "unit": "tbsp"},
+            {"name": "Chilli flakes",   "amount": 0.5, "unit": "tsp"},
+            {"name": "Salt",            "amount": 1,   "unit": "pinch"},
+            {"name": "Olive oil",       "amount": 1,   "unit": "tbsp"},
         ],
         "steps": [
             "Toast the sourdough slices until golden and crispy.",
@@ -115,6 +143,7 @@ SEED_RECIPES: list[dict] = [
         ],
     },
     {
+        "author": "bob",
         "title": "Chocolate Lava Cake",
         "description": (
             "Individual warm chocolate cakes with a gooey molten centre — "
@@ -143,13 +172,14 @@ SEED_RECIPES: list[dict] = [
             "Fold the chocolate mixture into the egg mixture, then sift in the "
             "flour and fold gently until just combined.",
             "Divide the batter evenly between the prepared ramekins.",
-            "Bake for 10–12 minutes until the edges are set but the centre is "
+            "Bake for 10-12 minutes until the edges are set but the centre is "
             "still slightly wobbly.",
             "Run a knife around the edge and carefully invert onto serving plates. "
             "Serve immediately with a scoop of vanilla ice cream.",
         ],
     },
     {
+        "author": "alice",
         "title": "Greek Salad",
         "description": (
             "Fresh, vibrant salad with tomatoes, cucumber, olives, "
@@ -160,14 +190,14 @@ SEED_RECIPES: list[dict] = [
         "prep_time": 10,
         "cook_time": 0,
         "ingredients": [
-            {"name": "Cherry tomatoes",     "amount": 200, "unit": "g"},
-            {"name": "Cucumber",            "amount": 1,   "unit": "pcs"},
-            {"name": "Red onion",           "amount": 0.5, "unit": "pcs"},
-            {"name": "Kalamata olives",     "amount": 80,  "unit": "g"},
-            {"name": "Feta cheese",         "amount": 150, "unit": "g"},
-            {"name": "Olive oil",           "amount": 3,   "unit": "tbsp"},
-            {"name": "Red wine vinegar",    "amount": 1,   "unit": "tbsp"},
-            {"name": "Dried oregano",       "amount": 1,   "unit": "tsp"},
+            {"name": "Cherry tomatoes",  "amount": 200, "unit": "g"},
+            {"name": "Cucumber",         "amount": 1,   "unit": "pcs"},
+            {"name": "Red onion",        "amount": 0.5, "unit": "pcs"},
+            {"name": "Kalamata olives",  "amount": 80,  "unit": "g"},
+            {"name": "Feta cheese",      "amount": 150, "unit": "g"},
+            {"name": "Olive oil",        "amount": 3,   "unit": "tbsp"},
+            {"name": "Red wine vinegar", "amount": 1,   "unit": "tbsp"},
+            {"name": "Dried oregano",    "amount": 1,   "unit": "tsp"},
         ],
         "steps": [
             "Halve the cherry tomatoes and slice the cucumber into half-moons. "
@@ -180,6 +210,7 @@ SEED_RECIPES: list[dict] = [
         ],
     },
     {
+        "author": "bob",
         "title": "Mango Lassi",
         "description": (
             "A cool and creamy Indian yoghurt drink blended with "
@@ -190,12 +221,12 @@ SEED_RECIPES: list[dict] = [
         "prep_time": 5,
         "cook_time": 0,
         "ingredients": [
-            {"name": "Ripe mango",    "amount": 1,   "unit": "pcs"},
-            {"name": "Plain yoghurt", "amount": 250, "unit": "ml"},
-            {"name": "Milk",          "amount": 100, "unit": "ml"},
-            {"name": "Sugar",         "amount": 2,   "unit": "tbsp"},
-            {"name": "Cardamom",      "amount": 0.25,"unit": "tsp"},
-            {"name": "Ice cubes",     "amount": 4,   "unit": "pcs"},
+            {"name": "Ripe mango",    "amount": 1,    "unit": "pcs"},
+            {"name": "Plain yoghurt", "amount": 250,  "unit": "ml"},
+            {"name": "Milk",          "amount": 100,  "unit": "ml"},
+            {"name": "Sugar",         "amount": 2,    "unit": "tbsp"},
+            {"name": "Cardamom",      "amount": 0.25, "unit": "tsp"},
+            {"name": "Ice cubes",     "amount": 4,    "unit": "pcs"},
         ],
         "steps": [
             "Peel the mango and cut the flesh away from the stone.",
@@ -210,7 +241,7 @@ SEED_RECIPES: list[dict] = [
 
 def seed_database() -> None:
     """
-    Insert the sample recipes into the database if it is empty.
+    Insert demo users and sample recipes into the database if it is empty.
 
     This function is called once at application startup.
     It does nothing if the database already contains recipes.
@@ -220,7 +251,29 @@ def seed_database() -> None:
         if existing:
             return  # Already seeded — skip
 
+        # 1. Create demo users
+        user_map: dict[str, int] = {}
+        for u in SEED_USERS:
+            # Skip if the user already exists (e.g. after a partial seed)
+            existing_user = db.query(User).filter(
+                User.username == u["username"]
+            ).first()
+            if existing_user:
+                user_map[u["username"]] = existing_user.id
+            else:
+                user = UserService.register(
+                    db,
+                    username=u["username"],
+                    email=u["email"],
+                    password=u["password"],
+                    bio=u["bio"],
+                )
+                user_map[u["username"]] = user.id
+
+        # 2. Create sample recipes, attributed to their authors
         for recipe_data in SEED_RECIPES:
+            author_username = recipe_data.get("author")
+            uid = user_map.get(author_username) if author_username else None
             RecipeService.create(
                 db=db,
                 title=recipe_data["title"],
@@ -231,6 +284,10 @@ def seed_database() -> None:
                 cook_time=recipe_data["cook_time"],
                 ingredients=recipe_data["ingredients"],
                 steps=recipe_data["steps"],
+                user_id=uid,
             )
 
-    print(f"✅  Database seeded with {len(SEED_RECIPES)} sample recipes.")
+    print(
+        f"Database seeded with {len(SEED_USERS)} demo users "
+        f"and {len(SEED_RECIPES)} sample recipes."
+    )

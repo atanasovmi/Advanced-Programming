@@ -8,6 +8,7 @@ Provides a multi-section form where the user can enter:
   - A dynamic list of ingredients (add / remove rows)
   - A dynamic list of instruction steps (add / remove rows)
 
+If the user is logged in the new recipe is attributed to their account.
 On successful submission the user is redirected to the new recipe's
 detail page.
 """
@@ -18,21 +19,22 @@ from app.models.database import SessionLocal
 from app.models.recipe import Category
 from app.services.recipe_service import RecipeService
 from app.views.shared import page_layout
+from app.views.auth import get_current_user_id, get_current_username
 
 
 @ui.page("/add")
 def add_recipe_page() -> None:
     """Render the add-recipe form."""
 
+    current_user_id = get_current_user_id()
+    current_username = get_current_username()
+
     # ------------------------------------------------------------------ #
     # State: dynamic ingredient & step rows                               #
     # ------------------------------------------------------------------ #
-    # Each entry in ingredient_rows is a dict of NiceGUI input widgets.
     ingredient_rows: list[dict] = []
-    # Each entry in step_rows is a NiceGUI textarea widget.
     step_rows: list[ui.textarea] = []
 
-    # Containers that hold the dynamic rows.
     ingredient_container: ui.column
     step_container: ui.column
 
@@ -55,7 +57,6 @@ def add_recipe_page() -> None:
                 ).classes("w-20").props("outlined dense")
 
                 def make_remover(row_dict: dict, element) -> callable:
-                    """Return a callback that removes this row."""
                     def remove():
                         if row_dict in ingredient_rows:
                             ingredient_rows.remove(row_dict)
@@ -73,7 +74,7 @@ def add_recipe_page() -> None:
         step_num = len(step_rows) + 1
         with step_container:
             with ui.row().classes("w-full gap-2 items-start") as row_el:
-                ui.badge(str(step_num), color="orange").classes(
+                ui.badge(str(step_num), color="teal").classes(
                     "mt-2 min-w-6 h-6 flex items-center justify-center"
                 )
                 step_input = ui.textarea(
@@ -106,7 +107,6 @@ def add_recipe_page() -> None:
     ) -> None:
         """Collect form values, validate, and persist the new recipe."""
 
-        # Collect ingredients
         ingredients = []
         for row in ingredient_rows:
             name = (row["name"].value or "").strip()
@@ -118,7 +118,6 @@ def add_recipe_page() -> None:
                 "unit":   (row["unit"].value or "").strip(),
             })
 
-        # Collect steps
         steps = [
             (s.value or "").strip()
             for s in step_rows
@@ -137,6 +136,7 @@ def add_recipe_page() -> None:
                     cook_time=int(cook_input.value or 0),
                     ingredients=ingredients,
                     steps=steps,
+                    user_id=current_user_id,  # attribute to logged-in user
                 )
             ui.notify(
                 f"'{recipe.title}' saved successfully! 🎉",
@@ -149,8 +149,30 @@ def add_recipe_page() -> None:
     # ------------------------------------------------------------------ #
     # Page layout                                                         #
     # ------------------------------------------------------------------ #
-    with page_layout("Add Recipe — CookBook"):
+    with page_layout("Add Recipe — RecipeVault"):
         ui.label("Add a New Recipe").classes("text-3xl font-bold")
+
+        # Show which user is adding this recipe
+        if current_username:
+            with ui.row().classes("items-center gap-1 text-sm text-teal-700"):
+                ui.icon("account_circle").classes("text-sm")
+                ui.label(f"This recipe will be attributed to your account: ")
+                ui.label(current_username).classes("font-semibold")
+        else:
+            with ui.row().classes(
+                "items-center gap-2 bg-amber-50 border border-amber-300 "
+                "rounded p-3 text-sm text-amber-800"
+            ):
+                ui.icon("info").classes("text-amber-600")
+                ui.label(
+                    "You are adding this recipe as a guest. "
+                    "Log in to have recipes attributed to your profile."
+                )
+                ui.button(
+                    "Login", icon="login",
+                    on_click=lambda: ui.navigate.to("/login"),
+                ).props("flat color=amber-8 dense size=sm")
+
         ui.button(
             "← Back to Home",
             on_click=lambda: ui.navigate.to("/")
@@ -198,7 +220,6 @@ def add_recipe_page() -> None:
 
             ingredient_container = ui.column().classes("w-full gap-2")
 
-            # Start with three empty rows for convenience
             add_ingredient_row()
             add_ingredient_row()
             add_ingredient_row()
@@ -206,7 +227,7 @@ def add_recipe_page() -> None:
             ui.button(
                 "Add Ingredient", icon="add",
                 on_click=add_ingredient_row,
-            ).props("outline color=orange size=sm")
+            ).props("outline color=teal size=sm")
 
         # ---- Steps card ----------------------------------------------
         with ui.card().classes("w-full"):
@@ -214,14 +235,13 @@ def add_recipe_page() -> None:
 
             step_container = ui.column().classes("w-full gap-2")
 
-            # Start with two empty step rows
             add_step_row()
             add_step_row()
 
             ui.button(
                 "Add Step", icon="add",
                 on_click=add_step_row,
-            ).props("outline color=orange size=sm")
+            ).props("outline color=teal size=sm")
 
         # ---- Submit -------------------------------------------------
         ui.button(
@@ -231,4 +251,4 @@ def add_recipe_page() -> None:
                 category_select,
                 servings_input, prep_input, cook_input,
             ),
-        ).props("color=orange size=lg").classes("self-end")
+        ).props("color=teal size=lg").classes("self-end")

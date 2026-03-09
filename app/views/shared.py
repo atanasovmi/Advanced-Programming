@@ -2,13 +2,13 @@
 app/views/shared.py
 
 Reusable helper components used across multiple views:
-  - page_layout: header + footer wrapper
+  - page_layout: header + footer wrapper (auth-aware navigation)
   - star_display: render filled/empty star icons for a rating
-  - category_color: map Category → Quasar colour name
+  - category_color: map Category -> Quasar colour name
 """
 
 from contextlib import contextmanager
-from nicegui import ui
+from nicegui import ui, app as _app
 from app.models.recipe import Category
 
 
@@ -29,35 +29,66 @@ def category_color(category: Category) -> str:
 
 
 @contextmanager
-def page_layout(title: str = "🍽️ CookBook"):
+def page_layout(title: str = "RecipeVault"):
     """
     Context manager that wraps page content with a consistent
     header navigation bar and a footer.
+
+    The header shows different buttons depending on whether a user
+    is currently logged in (stored in ``app.storage.user``).
 
     Usage::
 
         with page_layout("My Page"):
             ui.label("Hello!")
     """
-    # ---- Header --------------------------------------------------------
-    with ui.header(elevated=True).classes("items-center justify-between bg-orange-600"):
-        with ui.row().classes("items-center gap-4"):
-            ui.label("🍽️").classes("text-3xl")
-            ui.label("CookBook").classes("text-2xl font-bold text-white")
+    current_username = _app.storage.user.get("username")
 
-        with ui.row().classes("gap-2"):
+    # ---- Header --------------------------------------------------------
+    with ui.header(elevated=True).classes(
+        "items-center justify-between bg-teal-700"
+    ):
+        with ui.row().classes("items-center gap-3"):
+            ui.label("🍳").classes("text-3xl")
+            ui.label("RecipeVault").classes(
+                "text-2xl font-bold text-white cursor-pointer"
+            ).on("click", lambda: ui.navigate.to("/"))
+
+        with ui.row().classes("gap-2 items-center"):
             ui.button(
                 "Home", icon="home",
                 on_click=lambda: ui.navigate.to("/")
             ).props("flat color=white")
+
             ui.button(
                 "Add Recipe", icon="add",
                 on_click=lambda: ui.navigate.to("/add")
             ).props("flat color=white")
+
             ui.button(
                 "Shopping List", icon="shopping_cart",
                 on_click=lambda: ui.navigate.to("/shopping")
             ).props("flat color=white")
+
+            if current_username:
+                # Logged-in: show username chip + logout
+                ui.button(
+                    current_username, icon="account_circle",
+                    on_click=lambda: ui.navigate.to(f"/profile/{current_username}")
+                ).props("flat color=white")
+                ui.button(
+                    "Logout", icon="logout",
+                    on_click=lambda: ui.navigate.to("/logout")
+                ).props("flat color=white")
+            else:
+                ui.button(
+                    "Login", icon="login",
+                    on_click=lambda: ui.navigate.to("/login")
+                ).props("flat color=white")
+                ui.button(
+                    "Register", icon="person_add",
+                    on_click=lambda: ui.navigate.to("/register")
+                ).props("flat color=white")
 
     # ---- Page body (caller fills this) ---------------------------------
     with ui.column().classes("w-full max-w-6xl mx-auto px-4 py-6 gap-6"):
@@ -65,7 +96,7 @@ def page_layout(title: str = "🍽️ CookBook"):
 
     # ---- Footer --------------------------------------------------------
     with ui.footer().classes("bg-grey-2 text-grey-7 text-center py-3"):
-        ui.label("🍽️ CookBook — OOP Project 2026")
+        ui.label("🍳 RecipeVault — Personal Recipe Manager · OOP Project 2026")
 
 
 def star_display(score: float, max_stars: int = 5) -> None:

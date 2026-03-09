@@ -4,11 +4,12 @@ app/views/recipe_detail.py
 The recipe detail page ("/recipe/{id}").
 
 Shows:
-  - Recipe title, category, servings, time info
+  - Recipe title, author, category, servings, time info
   - Ingredients list
   - Numbered step-by-step instructions
   - Average star rating and all user reviews
   - Form to submit a new rating
+  - Bookmark button (logged-in users)
   - Delete button to remove the recipe
 """
 
@@ -17,12 +18,16 @@ from nicegui import ui
 from app.models.database import SessionLocal
 from app.services.recipe_service import RecipeService
 from app.services.rating_service import RatingService
+from app.services.user_service import UserService
 from app.views.shared import page_layout, star_display, category_color
+from app.views.auth import get_current_user_id
 
 
 @ui.page("/recipe/{recipe_id}")
 def recipe_detail_page(recipe_id: int) -> None:
     """Render the detail view for a single recipe."""
+
+    current_user_id = get_current_user_id()
 
     # ------------------------------------------------------------------ #
     # Load data                                                           #
@@ -49,6 +54,8 @@ def recipe_detail_page(recipe_id: int) -> None:
             "cook_time":   recipe.cook_time,
             "total_time":  recipe.total_time,
             "avg_rating":  round(recipe.average_rating, 1),
+            "author_id":   recipe.user_id,
+            "author":      recipe.author.username if recipe.author else None,
             "ingredients": [
                 {"name": i.name, "amount": i.amount, "unit": i.unit}
                 for i in recipe.ingredients
@@ -59,6 +66,12 @@ def recipe_detail_page(recipe_id: int) -> None:
                 for r in recipe.ratings
             ],
         }
+
+        # Check bookmark status for logged-in user
+        is_bookmarked = (
+            UserService.is_bookmarked(db, current_user_id, recipe_id)
+            if current_user_id else False
+        )
 
     # ------------------------------------------------------------------ #
     # Helpers                                                             #
@@ -137,6 +150,15 @@ def recipe_detail_page(recipe_id: int) -> None:
                     ui.label(data["title"]).classes("text-3xl font-bold")
                     ui.label(data["description"]).classes("text-grey-7")
 
+                    # Author attribution
+                    if data["author"]:
+                        with ui.row().classes("items-center gap-1 mt-1"):
+                            ui.icon("person").classes("text-sm text-teal-600")
+                            ui.link(
+                                f"by {data['author']}",
+                                f"/profile/{data['author']}"
+                            ).classes("text-sm text-teal-600 italic")
+
                     with ui.row().classes("gap-6 mt-2 text-sm text-grey-6"):
                         with ui.row().classes("items-center gap-1"):
                             ui.icon("schedule")
@@ -151,12 +173,50 @@ def recipe_detail_page(recipe_id: int) -> None:
                             ui.icon("people")
                             ui.label(f"{data['servings']} servings")
 
-                # Average rating (top-right)
-                with ui.column().classes("items-center"):
+                # Top-right: average rating + bookmark button
+                with ui.column().classes("items-center gap-2"):
                     star_display(data["avg_rating"])
                     ui.label(
                         f"{data['avg_rating']} / 5.0  ({len(data['ratings'])} ratings)"
                     ).classes("text-sm text-grey-6")
+
+                    # Bookmark button for logged-in users
+                    if current_user_id:
+                        bookmarked_state: list[bool] = [is_bookmarked]
+
+                        # Props constants to avoid duplication
+                        _BM_ACTIVE   = ("Bookmarked", "bookmark",        "color=teal outline")
+                        _BM_INACTIVE = ("Bookmark",   "bookmark_border", "color=grey-6 outline")
+
+                        _lbl, _ico, _props = _BM_ACTIVE if is_bookmarked else _BM_INACTIVE
+                        bookmark_btn = ui.button(_lbl, icon=_ico).props(_props)
+
+                        def toggle_bookmark() -> None:
+                            with SessionLocal() as db:
+                                if bookmarked_state[0]:
+                                    UserService.remove_bookmark(
+                                        db, current_user_id, recipe_id
+                                    )
+                                    bookmarked_state[0] = False
+                                    lbl, ico, props = _BM_INACTIVE
+                                    ui.notify("Bookmark removed.", type="info")
+                                else:
+                                    UserService.add_bookmark(
+                                        db, current_user_id, recipe_id
+                                    )
+                                    bookmarked_state[0] = True
+                                    lbl, ico, props = _BM_ACTIVE
+                                    ui.notify("Recipe bookmarked! 🔖", type="positive")
+                            bookmark_btn.set_text(lbl)
+                            bookmark_btn.props(f"icon={ico} {props}")
+
+                        bookmark_btn.on("click", toggle_bookmark)
+                    else:
+                        ui.button(
+                            "Login to bookmark",
+                            icon="bookmark_border",
+                            on_click=lambda: ui.navigate.to("/login"),
+                        ).props("flat color=grey-5 size=sm")
 
         # ---- Two-column layout: Ingredients | Steps ------------------
         with ui.row().classes("w-full gap-4 items-start flex-wrap"):
@@ -175,7 +235,7 @@ def recipe_detail_page(recipe_id: int) -> None:
                             with ui.item():
                                 with ui.item_section().props("avatar"):
                                     ui.icon("fiber_manual_record").classes(
-                                        "text-xs text-orange-400"
+                                        "text-xs text-teal-400"
                                     )
                                 with ui.item_section():
                                     ui.item_label(label)
@@ -189,7 +249,7 @@ def recipe_detail_page(recipe_id: int) -> None:
                     for idx, step_text in enumerate(data["steps"], start=1):
                         with ui.row().classes("items-start gap-3 mb-3"):
                             ui.badge(
-                                str(idx), color="orange"
+                                str(idx), color="teal"
                             ).classes("mt-1 min-w-6 h-6 flex items-center justify-center")
                             ui.label(step_text).classes("text-sm flex-1")
                 else:
@@ -237,7 +297,7 @@ def recipe_detail_page(recipe_id: int) -> None:
                 on_click=lambda: submit_rating(
                     selected_score, comment_input, rating_container
                 ),
-            ).props("color=orange")
+            ).props("color=teal")
 
         # ---- Danger zone: delete ------------------------------------
         with ui.expansion("⚠️ Danger Zone", icon="warning").classes(

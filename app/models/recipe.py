@@ -9,7 +9,7 @@ It owns a list of Ingredients, ordered Steps, and user Ratings.
 
 import enum
 from datetime import datetime
-from sqlalchemy import Column, Integer, String, Text, DateTime, Enum
+from sqlalchemy import Column, Integer, String, Text, DateTime, Enum, ForeignKey
 from sqlalchemy.orm import relationship
 from app.models.database import Base
 
@@ -54,6 +54,15 @@ class Recipe(Base):
     cook_time = Column(Integer, nullable=False, default=0)   # minutes
     created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
 
+    # Optional link to the user who created this recipe.
+    # NULL means the recipe was added anonymously / seeded.
+    user_id = Column(
+        Integer, ForeignKey("users.id", ondelete="SET NULL"),
+        nullable=True, index=True
+    )
+
+    author = relationship("User", back_populates="recipes")
+
     # Cascade delete: when a recipe is deleted, its children are too.
     ingredients = relationship(
         "Ingredient", back_populates="recipe",
@@ -66,6 +75,10 @@ class Recipe(Base):
     ratings = relationship(
         "Rating", back_populates="recipe",
         cascade="all, delete-orphan", order_by="Rating.created_at"
+    )
+    bookmarks = relationship(
+        "Bookmark", back_populates="recipe",
+        cascade="all, delete-orphan"
     )
 
     @property

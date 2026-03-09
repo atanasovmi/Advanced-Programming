@@ -1,12 +1,12 @@
 """
 app/views/home.py
 
-The home page ("/") of the CookBook application.
+The home page ("/") of RecipeVault.
 
 Features:
   - Search bar to filter recipes by title / description
   - Category filter buttons
-  - Responsive grid of recipe cards (title, category badge,
+  - Responsive grid of recipe cards (title, author, category badge,
     average rating, prep/cook time)
   - Click on a card navigates to the recipe detail page
 """
@@ -65,6 +65,7 @@ def home_page() -> None:
                     "total_time":  r.total_time,
                     "avg_rating":  round(r.average_rating, 1),
                     "num_ratings": len(r.ratings),
+                    "author":      r.author.username if r.author else None,
                 }
                 for r in recipes
             ]
@@ -92,6 +93,12 @@ def home_page() -> None:
                 "text-sm text-grey-6 line-clamp-2"
             )
 
+            # Author attribution
+            if data["author"]:
+                ui.label(f"by {data['author']}").classes(
+                    "text-xs text-teal-600 italic"
+                )
+
             with ui.row().classes("items-center justify-between mt-2 w-full"):
                 with ui.row().classes("items-center gap-1"):
                     star_display(data["avg_rating"])
@@ -108,7 +115,7 @@ def home_page() -> None:
     # ------------------------------------------------------------------ #
     # Page layout                                                         #
     # ------------------------------------------------------------------ #
-    with page_layout("Home — CookBook"):
+    with page_layout("Home — RecipeVault"):
 
         # Page title
         ui.label("Discover Recipes").classes("text-3xl font-bold")

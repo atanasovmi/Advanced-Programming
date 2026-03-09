@@ -103,6 +103,7 @@ class RecipeService:
         cook_time: int,
         ingredients: list[dict],
         steps: list[str],
+        user_id: Optional[int] = None,
     ) -> Recipe:
         """
         Persist a new recipe together with its ingredients and steps.
@@ -117,6 +118,7 @@ class RecipeService:
             cook_time:   Cooking time in minutes.
             ingredients: List of dicts with keys "name", "amount", "unit".
             steps:       Ordered list of instruction strings.
+            user_id:     Optional FK of the user who authored this recipe.
 
         Returns:
             The newly created and committed Recipe object.
@@ -139,6 +141,7 @@ class RecipeService:
             servings=servings,
             prep_time=prep_time,
             cook_time=cook_time,
+            user_id=user_id,
         )
         db.add(recipe)
         db.flush()  # Get the auto-generated recipe.id
