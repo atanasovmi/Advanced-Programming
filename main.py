@@ -1,16 +1,35 @@
-# This is a sample Python script.
+"""
+main.py — CookBook Application Entry Point
 
-# Press Umschalt+F10 to execute it or replace it with your code.
-# Press Double Shift to search everywhere for classes, files, tool windows, actions, and settings.
+Starts the NiceGUI / FastAPI server, initialises the database,
+seeds it with sample data on the first run, and registers all
+page routes.
 
+Run with:
+    python main.py
 
-def print_hi(name):
-    # Use a breakpoint in the code line below to debug your script.
-    print(f'Hi, {name}')  # Press Strg+F8 to toggle the breakpoint.
+The application will be available at http://localhost:8080
+"""
 
+from nicegui import ui
 
-# Press the green button in the gutter to run the script.
-if __name__ == '__main__':
-    print_hi('PyCharm')
+# 1. Initialise the database schema (creates tables if they don't exist)
+from app.models.database import init_db
+init_db()
 
-# See PyCharm help at https://www.jetbrains.com/help/pycharm/
+# 2. Seed the database with sample recipes on first run
+from app.seed import seed_database
+seed_database()
+
+# 3. Register all page routes by importing the views package
+import app.views  # noqa: F401, E402
+
+# 4. Start the NiceGUI server
+if __name__ in {"__main__", "__mp_main__"}:
+    ui.run(
+        title="🍽️ CookBook",
+        favicon="🍽️",
+        port=8080,
+        reload=False,
+    )
+
