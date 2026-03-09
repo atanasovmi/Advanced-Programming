@@ -198,7 +198,7 @@ class TestRecipeService:
 class TestRatingService:
     """Tests for rating submission and retrieval."""
 
-    def _make_recipe(self, db):
+    def make_recipe(self, db):
         return RecipeService.create(
             db, title=f"R-{id(db)}", description="d",
             category=Category.DINNER, servings=1,
@@ -206,7 +206,7 @@ class TestRatingService:
         )
 
     def test_submit_and_get(self, db):
-        recipe = self._make_recipe(db)
+        recipe = self.make_recipe(db)
         rating = RatingService.submit(db, recipe.id, score=4, comment="Great!")
         assert rating.id is not None
         assert rating.score == 4
@@ -215,7 +215,7 @@ class TestRatingService:
         assert len(ratings) == 1
 
     def test_submit_invalid_score(self, db):
-        recipe = self._make_recipe(db)
+        recipe = self.make_recipe(db)
         with pytest.raises(ValueError, match="between 1 and 5"):
             RatingService.submit(db, recipe.id, score=0)
         with pytest.raises(ValueError, match="between 1 and 5"):

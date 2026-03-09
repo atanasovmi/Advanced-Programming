@@ -58,7 +58,7 @@ def _migrate_schema() -> None:
             # Build an ALTER TABLE statement for the missing column
             col_type = column.type.compile(dialect=engine.dialect)
             stmt = f"ALTER TABLE {table.name} ADD COLUMN {column.name} {col_type}"
-            if column.default is not None:
+            if column.default is not None and not callable(column.default.arg):
                 stmt += f" DEFAULT {column.default.arg!r}"
             with engine.begin() as conn:
                 conn.execute(text(stmt))
@@ -77,5 +77,5 @@ def init_db() -> None:
     # it tries to create the schema.
     from app.models import recipe, ingredient, step, rating, user, bookmark  # noqa: F401
 
-    _migrate_schema()
     Base.metadata.create_all(bind=engine)
+    _migrate_schema()
