@@ -1,11 +1,12 @@
-"""
-app/views/__init__.py
+"""Registers all NiceGUI page routes for VentureCanvas."""
 
-Registers all NiceGUI page routes.
-Importing this module is enough to activate every route.
-"""
+from app.views import add_venture, auth, home, profile, resource_planner, venture_detail  # noqa: F401
 
-from app.views import home, recipe_detail, add_recipe, shopping_list  # noqa: F401
-from app.views import auth, profile  # noqa: F401
-
-__all__ = ["home", "recipe_detail", "add_recipe", "shopping_list", "auth", "profile"]
+__all__ = [
+    "home",
+    "venture_detail",
+    "add_venture",
+    "resource_planner",
+    "auth",
+    "profile",
+]

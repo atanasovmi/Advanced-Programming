@@ -1,29 +1,28 @@
-# 🍳 RecipeVault — Personal Recipe Manager
+# 🚀 VentureCanvas — Innovation Portfolio Workspace
 
 > **BSc WI — Objektorientierte Programmierung 1 · Group Project 2026**
 
-A browser-based **personal recipe management platform** built with **NiceGUI**, **SQLAlchemy** (ORM), and **SQLite**.  
-Users create their own account, share recipes they've authored, bookmark favourites from others, and build a personal cooking profile — all backed by a clean three-layer OOP architecture.
+VentureCanvas is a browser-based **innovation portfolio and venture brief platform** built with **NiceGUI**, **SQLAlchemy** (ORM), and **SQLite**. Users can register, publish professional concept briefs, define capability needs and roadmap milestones, shortlist promising ideas, and review ventures from the community.
 
 ---
 
-## Why RecipeVault?
+## Why VentureCanvas?
 
-Generic recipe websites give you thousands of recipes, but not *yours*.  
-RecipeVault solves a real problem: **keeping your own recipes in one place, accessible from any browser, attributed to you**, and enriched with community ratings.  
-Think of it as a lightweight personal Allrecipes — where every recipe has an owner, and every user has a profile that grows over time.
+A recipe app may demonstrate CRUD, but it does not communicate a strong professional project identity. VentureCanvas is designed as a more credible and creative OOP semester project: a place where teams can document product ideas, startup concepts, service innovations, or transformation initiatives in a structured, browser-based workspace.
+
+It solves a realistic problem: **capturing early-stage venture ideas in a way that is searchable, collaborative, and presentation-ready**.
 
 ---
 
 ## 📸 Screenshots
 
-| Home — Recipe Grid | Recipe Detail |
+| Explore | Venture Detail |
 |---|---|
-| ![Home](docs/screenshots/home.png) | ![Recipe Detail](docs/screenshots/recipe_detail.png) |
+| ![Explore](docs/screenshots/explore.png) | ![Detail](docs/screenshots/venture_detail.png) |
 
-| Login | User Profile |
+| Submit Brief | Profile |
 |---|---|
-| ![Login](docs/screenshots/login.png) | ![Profile](docs/screenshots/profile.png) |
+| ![Submit](docs/screenshots/submit_brief.png) | ![Profile](docs/screenshots/profile.png) |
 
 ---
 
@@ -31,18 +30,18 @@ Think of it as a lightweight personal Allrecipes — where every recipe has an o
 
 | Feature | Description |
 |---|---|
-| 👤 **User accounts** | Register with username + email + password; securely hashed (PBKDF2-HMAC-SHA256) |
-| 🔐 **Login / Logout** | Session stored in encrypted browser cookie via NiceGUI storage |
-| 📋 **Profile page** | Public profile for every user — shows authored recipes, bio, member since |
-| 🔖 **Bookmarks** | Logged-in users can bookmark any recipe; bookmarks appear on their profile |
-| ✍️ **Recipe authorship** | Every recipe is attributed to the user who created it; clickable author link |
-| 🔍 **Search** | Live search by recipe title or description |
-| 🏷️ **Category filter** | Filter by Breakfast, Lunch, Dinner, Dessert, Snack, or Drink |
-| 🍳 **Recipe detail** | Full ingredients list + numbered step-by-step instructions |
-| ⭐ **Star ratings** | Submit a 1–5 star review with an optional comment |
-| ➕ **Add recipe** | Dynamic form with add/remove ingredient rows and instruction steps |
-| 🛒 **Shopping list** | Select multiple recipes; ingredients are aggregated by name + unit |
-| 🗑️ **Delete recipe** | Remove a recipe and all its related data |
+| 👤 **User accounts** | Register with username, email, password, and a professional bio |
+| 🔐 **Login / Logout** | Session is stored in encrypted browser cookies via NiceGUI storage |
+| 🧾 **Venture briefs** | Create structured innovation briefs with title, summary, sector, timeline, and team size |
+| 🧰 **Capability planning** | Define resource needs such as UX research, prompt design, or compliance effort |
+| 🗺️ **Roadmap milestones** | Capture ordered milestones that describe the venture delivery path |
+| 🔍 **Search** | Search venture briefs by title or description |
+| 🏷️ **Sector filter** | Filter by AI & Data, Sustainability, Health, Education, Culture, or Productivity |
+| ⭐ **Peer reviews** | Submit a 1–5 score and optional written feedback for any venture brief |
+| 📌 **Shortlists** | Save promising ventures to your personal shortlist |
+| 👤 **Public profiles** | Every user has a profile showing authored ventures and, privately, their shortlist |
+| 🧮 **Resource planner** | Aggregate capability needs across multiple ventures into one planning view |
+| 🗑️ **Delete brief** | Remove venture briefs and all dependent data |
 
 ---
 
@@ -72,31 +71,32 @@ The application follows the three-layer architecture required by the module:
 
 ```
 Advanced-Programming/
-├── main.py                  # Entry point – starts NiceGUI server
-├── requirements.txt         # Python dependencies
+├── main.py
+├── requirements.txt
 ├── app/
 │   ├── models/
-│   │   ├── database.py      # SQLAlchemy engine, session factory, Base
-│   │   ├── user.py          # User model + password hashing helpers
-│   │   ├── bookmark.py      # Bookmark model (user ↔ recipe many-to-many)
-│   │   ├── recipe.py        # Recipe model + Category enum
-│   │   ├── ingredient.py    # Ingredient model (belongs to Recipe)
-│   │   ├── step.py          # Step model (ordered instructions)
-│   │   └── rating.py        # Rating model (1–5 stars + comment)
+│   │   ├── database.py
+│   │   ├── user.py
+│   │   ├── venture.py
+│   │   ├── resource_need.py
+│   │   ├── milestone.py
+│   │   ├── review.py
+│   │   └── shortlist.py
 │   ├── services/
-│   │   ├── user_service.py    # Register, authenticate, profile, bookmarks
-│   │   ├── recipe_service.py  # CRUD + search for recipes
-│   │   └── rating_service.py  # Submit + read ratings
+│   │   ├── user_service.py
+│   │   ├── venture_service.py
+│   │   └── review_service.py
 │   ├── views/
-│   │   ├── shared.py          # Reusable: auth-aware header/footer, star display
-│   │   ├── auth.py            # /login, /register, /logout + session helpers
-│   │   ├── profile.py         # /profile, /profile/{username}
-│   │   ├── home.py            # "/" — recipe grid with search & filter
-│   │   ├── recipe_detail.py   # "/recipe/{id}" — full recipe + bookmark
-│   │   ├── add_recipe.py      # "/add" — dynamic add-recipe form
-│   │   └── shopping_list.py   # "/shopping" — ingredient aggregator
-│   └── seed.py              # Demo users + sample recipes on first run
-└── readme.md
+│   │   ├── shared.py
+│   │   ├── auth.py
+│   │   ├── home.py
+│   │   ├── venture_detail.py
+│   │   ├── add_venture.py
+│   │   ├── profile.py
+│   │   └── resource_planner.py
+│   └── seed.py
+├── docs/
+└── tests/
 ```
 
 ---
@@ -106,21 +106,17 @@ Advanced-Programming/
 ```
 User
   ├── id, username, email, password_hash, bio, created_at
-  ├── ── Recipe   (authored recipes)       [1 → *]
-  └── ── Bookmark (saved recipe refs)      [1 → *]
+  ├── ── Venture   (authored venture briefs) [1 → *]
+  └── ── Shortlist (saved ventures)          [1 → *]
 
-Recipe
-  ├── id, title, description, category, servings
-  ├── prep_time, cook_time, created_at
-  ├── user_id  (FK → User, nullable)
-  ├── ── Ingredient (name, amount, unit)   [1 → *]
-  ├── ── Step       (number, description)  [1 → *]
-  ├── ── Rating     (score 1–5, comment)   [1 → *]
-  └── ── Bookmark   (back-refs)            [1 → *]
-
-Bookmark
-  ├── id, user_id (FK), recipe_id (FK), created_at
-  └── UNIQUE(user_id, recipe_id)
+Venture
+  ├── id, title, description, sector, team_size
+  ├── discovery_weeks, build_weeks, created_at
+  ├── user_id (FK → User, nullable)
+  ├── ── ResourceNeed (capability, effort, unit) [1 → *]
+  ├── ── Milestone    (number, description)      [1 → *]
+  ├── ── Review       (score, comment)           [1 → *]
+  └── ── Shortlist    (saved references)         [1 → *]
 ```
 
 All relationships use **cascade delete** where appropriate.
@@ -131,10 +127,11 @@ All relationships use **cascade delete** where appropriate.
 
 | Library | Version | Purpose |
 |---|---|---|
-| [NiceGUI](https://nicegui.io/) | >= 2.0 | Browser-based UI built in pure Python (Vue.js + Quasar under the hood) |
-| [SQLAlchemy](https://www.sqlalchemy.org/) | >= 2.0 | ORM — no raw SQL; all queries go through Python model classes |
-| SQLite (stdlib) | — | Embedded database; no external server required |
-| hashlib (stdlib) | — | PBKDF2-HMAC-SHA256 password hashing; no extra dependency |
+| [NiceGUI](https://nicegui.io/) | >= 2.0 | Browser-based UI built in pure Python |
+| [SQLAlchemy](https://www.sqlalchemy.org/) | >= 2.0 | ORM — no raw SQL; all persistence goes through model classes |
+| SQLite (stdlib) | — | Embedded relational database |
+| hashlib (stdlib) | — | PBKDF2-HMAC-SHA256 password hashing |
+| pytest | >= 7.0 | Automated tests for model and service logic |
 
 ---
 
@@ -152,15 +149,14 @@ pip install -r requirements.txt
 python main.py
 ```
 
-The server starts at **http://localhost:8080**.  
-On the first run the database is created and seeded with **2 demo users** and **6 sample recipes** automatically.
+The server starts at **http://localhost:8080**. On first run, the database is created and seeded with **2 demo users** and **6 sample venture briefs** automatically.
 
 ### Demo accounts
 
-| Username | Password | Recipes |
-|---|---|---|
-| `alice` | `alice123` | Spaghetti Carbonara, Avocado Toast, Greek Salad |
-| `bob` | `bob12345` | Blueberry Pancakes, Chocolate Lava Cake, Mango Lassi |
+| Username | Password |
+|---|---|
+| `alice` | `alice123` |
+| `bob` | `bob12345` |
 
 ---
 
@@ -168,18 +164,18 @@ On the first run the database is created and seeded with **2 demo users** and **
 
 | ID | As a … | I want to … | So that … |
 |---|---|---|---|
-| US-1 | visitor | register an account | I have a personal space on the platform |
-| US-2 | visitor | log in with my username and password | I can access my profile and bookmarks |
-| US-3 | user | view my profile page | I can see all my recipes and bookmarked favourites |
-| US-4 | user | edit my bio | I can tell the community about myself |
-| US-5 | user | add a new recipe | It is attributed to my account and visible on my profile |
-| US-6 | user | bookmark a recipe | I can save recipes I want to cook later |
-| US-7 | user | remove a bookmark | I can keep my collection up to date |
-| US-8 | visitor | browse all recipes on the home page | I can discover what others have shared |
-| US-9 | visitor | filter recipes by category | I only see recipes relevant to the meal I'm planning |
-| US-10 | visitor | click on an author's name | I can see their profile and other recipes |
-| US-11 | user | submit a star rating and comment | I can share feedback with other users |
-| US-12 | user | generate a shopping list | I can do one combined grocery run for multiple recipes |
+| US-1 | visitor | register an account | I can build a professional innovation profile |
+| US-2 | visitor | log in with my username and password | I can manage my own venture portfolio |
+| US-3 | user | create a venture brief | I can document an idea in a structured way |
+| US-4 | user | define capability needs | I can estimate what resources the idea requires |
+| US-5 | user | add roadmap milestones | I can communicate how the concept could be delivered |
+| US-6 | visitor | browse all ventures | I can discover ideas from other users |
+| US-7 | visitor | filter ventures by sector | I can focus on topics relevant to me |
+| US-8 | visitor | search venture titles and summaries | I can find promising concepts quickly |
+| US-9 | user | shortlist a venture | I can save concepts I want to revisit later |
+| US-10 | user | review a venture | I can provide peer feedback on its quality or feasibility |
+| US-11 | user | view a profile page | I can see authored ventures and track my public presence |
+| US-12 | user | aggregate capability needs across ventures | I can create a lightweight planning overview |
 
 ---
 
@@ -187,27 +183,23 @@ On the first run the database is created and seeded with **2 demo users** and **
 
 ### UC-1: Register & Login
 - **Actor**: New visitor
-- **Flow**: Click "Register" → fill username / email / password / bio → account created and logged in → redirected to home
+- **Flow**: Open `/register` → enter username, email, password, and bio → account created and logged in → redirected to the explore page
 
-### UC-2: View & Edit Profile
+### UC-2: Create a Venture Brief
 - **Actor**: Logged-in user
-- **Flow**: Click username in header → `/profile/<username>` shows authored recipes + bookmarks; expand "Edit bio" section to update bio
+- **Flow**: Open `/submit` → fill overview, capability needs, and roadmap milestones → save → redirected to `/venture/{id}`
 
-### UC-3: Bookmark a Recipe
+### UC-3: Review and Shortlist a Venture
 - **Actor**: Logged-in user
-- **Flow**: Open any recipe detail page → click "Bookmark" button → bookmark saved; button updates; recipe now appears in profile bookmarks
+- **Flow**: Open a venture detail page → optionally click **Shortlist** → select review score and comment → submit feedback
 
-### UC-4: Add an Authored Recipe
-- **Actor**: Logged-in user
-- **Flow**: Click "Add Recipe" in the nav → fill form → "Save Recipe" → new recipe appears in the grid attributed to the user
-
-### UC-5: Browse & Filter Recipes
-- **Actor**: Any visitor
-- **Flow**: Open `/` → optionally search → click a category chip → grid updates live; author name shown on each card
-
-### UC-6: Generate a Shopping List
+### UC-4: Use the Resource Planner
 - **Actor**: Any user
-- **Flow**: Navigate to `/shopping` → check one or more recipes → "Generate List" → combined ingredient list displayed
+- **Flow**: Open `/planner` → select multiple venture briefs → click **Generate Plan** → aggregated capability needs are shown
+
+### UC-5: View and Edit Profile
+- **Actor**: Logged-in user
+- **Flow**: Open `/profile/<username>` → review authored ventures and shortlist → edit bio in the inline form
 
 ---
 
@@ -215,11 +207,11 @@ On the first run the database is created and seeded with **2 demo users** and **
 
 | Member | Responsibility |
 |---|---|
-| Member 1 | Data models (`app/models/`): User, Bookmark, Recipe + relationships; database setup; seed data |
-| Member 2 | Service layer (`app/services/`): UserService (auth, profile, bookmarks), RecipeService, RatingService |
-| Member 3 | NiceGUI views (`app/views/`): auth pages, profile page, updated shared layout, README |
+| Member 1 | Data models (`app/models/`), database setup, schema migration support, seed data |
+| Member 2 | Service layer (`app/services/`) for authentication, venture CRUD, reviews, and shortlist logic |
+| Member 3 | NiceGUI views (`app/views/`), reusable layout components, README, screenshots, and demo flow |
 
-> Every member commits independently to this repository. GitHub commit history reflects individual contributions.
+> Every team member should contribute directly through GitHub commits, pull requests, issue tracking, and documentation updates so the contribution history remains visible for assessment.
 
 ---
 
@@ -229,8 +221,7 @@ On the first run the database is created and seeded with **2 demo users** and **
 |---|---|---|
 | Project setup & data models | Week 3 | ✅ |
 | Service layer & CRUD operations | Week 5 | ✅ |
-| NiceGUI views (home, detail, add) | Week 8 | ✅ |
-| Shopping list & ratings | Week 10 | ✅ |
-| User auth, profiles & bookmarks | Week 11 | ✅ |
-| Final polish & README | Week 12 | ✅ |
-| Presentation | Last week | �� |
+| NiceGUI views & navigation | Week 8 | ✅ |
+| Reviews, shortlists, and planner | Week 10 | ✅ |
+| Documentation & presentation prep | Week 12 | ✅ |
+| Final presentation | Last week | ⏳ |

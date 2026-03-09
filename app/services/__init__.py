@@ -1,11 +1,7 @@
-"""
-app/services/__init__.py
+"""Exports the VentureCanvas service classes."""
 
-Exports the service classes so consumers only need one import path.
-"""
-
+from app.services.review_service import ReviewService
 from app.services.user_service import UserService
-from app.services.recipe_service import RecipeService
-from app.services.rating_service import RatingService
+from app.services.venture_service import VentureService
 
-__all__ = ["UserService", "RecipeService", "RatingService"]
+__all__ = ["UserService", "VentureService", "ReviewService"]

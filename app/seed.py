@@ -1,293 +1,180 @@
-"""
-app/seed.py
-
-Populates the database with sample data so that the application
-starts with useful demo content.
-
-On first run this module:
-  1. Creates two demo user accounts (alice and bob).
-  2. Inserts sample recipes attributed to those users.
-
-This module is safe to call multiple times: it checks whether any
-recipes already exist and skips seeding if they do.
-"""
+"""Populate the database with demo users and sample venture briefs."""
 
 from app.models.database import SessionLocal
-from app.models.recipe import Category
 from app.models.user import User
-from app.services.recipe_service import RecipeService
+from app.models.venture import Sector
 from app.services.user_service import UserService
-
-
-# ---------------------------------------------------------------------------
-# Demo user definitions
-# ---------------------------------------------------------------------------
+from app.services.venture_service import VentureService
 
 SEED_USERS: list[dict] = [
     {
         "username": "alice",
-        "email":    "alice@example.com",
+        "email": "alice@example.com",
         "password": "alice123",
-        "bio":      "Home cook & pasta enthusiast. I share the recipes I actually make.",
+        "bio": "Product strategist who turns early concepts into testable venture stories.",
     },
     {
         "username": "bob",
-        "email":    "bob@example.com",
+        "email": "bob@example.com",
         "password": "bob12345",
-        "bio":      "Weekend baker and smoothie fan. Simplicity first.",
+        "bio": "Operations-minded builder focused on lean launches and scalable delivery.",
     },
 ]
 
-# ---------------------------------------------------------------------------
-# Sample recipe definitions
-# ---------------------------------------------------------------------------
-
-SEED_RECIPES: list[dict] = [
+SEED_VENTURES: list[dict] = [
     {
         "author": "alice",
-        "title": "Classic Spaghetti Carbonara",
-        "description": (
-            "A rich and creamy Roman pasta dish made with eggs, "
-            "Pecorino Romano, guanciale, and black pepper."
-        ),
-        "category": Category.DINNER,
-        "servings": 4,
-        "prep_time": 10,
-        "cook_time": 20,
-        "ingredients": [
-            {"name": "Spaghetti",        "amount": 400,  "unit": "g"},
-            {"name": "Guanciale",        "amount": 200,  "unit": "g"},
-            {"name": "Egg yolks",        "amount": 4,    "unit": "pcs"},
-            {"name": "Pecorino Romano",  "amount": 100,  "unit": "g"},
-            {"name": "Black pepper",     "amount": 2,    "unit": "tsp"},
-            {"name": "Salt",             "amount": 1,    "unit": "tsp"},
+        "title": "Signal Studio",
+        "description": "An AI-assisted insight room that converts interview notes into decision-ready product opportunities.",
+        "sector": Sector.AI_DATA,
+        "team_size": 4,
+        "discovery_weeks": 3,
+        "build_weeks": 6,
+        "resource_needs": [
+            {"name": "User interviews", "effort": 12, "unit": "hours"},
+            {"name": "Prompt design", "effort": 16, "unit": "hours"},
+            {"name": "Dashboard prototype", "effort": 24, "unit": "hours"},
         ],
-        "steps": [
-            "Bring a large pot of salted water to a boil and cook the spaghetti "
-            "until al dente according to the package instructions.",
-            "Meanwhile, cut the guanciale into small cubes and fry in a dry pan "
-            "over medium heat until crispy. Remove from heat.",
-            "In a bowl, whisk together the egg yolks, grated Pecorino Romano, "
-            "and plenty of freshly ground black pepper.",
-            "Reserve one cup of pasta cooking water, then drain the spaghetti.",
-            "Add the hot spaghetti to the pan with the guanciale. Remove from "
-            "heat and pour in the egg mixture, tossing quickly and adding a "
-            "splash of pasta water to create a creamy sauce.",
-            "Serve immediately topped with extra Pecorino and black pepper.",
+        "milestones": [
+            "Map the research workflow and define core pain points.",
+            "Prototype AI summarisation for three interview formats.",
+            "Validate the decision dashboard with two product teams.",
         ],
     },
     {
         "author": "bob",
-        "title": "Fluffy Blueberry Pancakes",
-        "description": (
-            "Light, golden pancakes packed with juicy blueberries — "
-            "perfect for a lazy weekend breakfast."
-        ),
-        "category": Category.BREAKFAST,
-        "servings": 3,
-        "prep_time": 10,
-        "cook_time": 15,
-        "ingredients": [
-            {"name": "All-purpose flour", "amount": 200, "unit": "g"},
-            {"name": "Milk",              "amount": 250, "unit": "ml"},
-            {"name": "Eggs",              "amount": 2,   "unit": "pcs"},
-            {"name": "Baking powder",     "amount": 2,   "unit": "tsp"},
-            {"name": "Sugar",             "amount": 30,  "unit": "g"},
-            {"name": "Butter",            "amount": 30,  "unit": "g"},
-            {"name": "Fresh blueberries", "amount": 150, "unit": "g"},
-            {"name": "Vanilla extract",   "amount": 1,   "unit": "tsp"},
+        "title": "Circular Office Sprint",
+        "description": "A workplace reuse marketplace for redistributing surplus furniture, devices, and office materials across campuses.",
+        "sector": Sector.SUSTAINABILITY,
+        "team_size": 5,
+        "discovery_weeks": 2,
+        "build_weeks": 5,
+        "resource_needs": [
+            {"name": "Supplier onboarding", "effort": 10, "unit": "hours"},
+            {"name": "Logistics mapping", "effort": 14, "unit": "hours"},
+            {"name": "Marketplace UX", "effort": 22, "unit": "hours"},
         ],
-        "steps": [
-            "Melt the butter and let it cool slightly.",
-            "In a large bowl, whisk together the flour, sugar, and baking powder.",
-            "In a separate bowl, beat the eggs with the milk, melted butter, "
-            "and vanilla extract.",
-            "Pour the wet ingredients into the dry ingredients and stir until "
-            "just combined — a few lumps are fine, do not over-mix.",
-            "Fold in the blueberries gently.",
-            "Heat a non-stick pan over medium heat and lightly grease it. "
-            "Pour roughly 80 ml of batter per pancake and cook until bubbles "
-            "form on the surface, then flip and cook for one more minute.",
-            "Serve warm with maple syrup and extra blueberries.",
+        "milestones": [
+            "Catalogue reusable inventory categories with pilot partners.",
+            "Launch the internal exchange flow for a single office location.",
+            "Measure saved cost and avoided waste after the first month.",
         ],
     },
     {
         "author": "alice",
-        "title": "Avocado Toast with Poached Egg",
-        "description": (
-            "Creamy smashed avocado on toasted sourdough topped with "
-            "a perfectly poached egg and chilli flakes."
-        ),
-        "category": Category.BREAKFAST,
-        "servings": 2,
-        "prep_time": 5,
-        "cook_time": 10,
-        "ingredients": [
-            {"name": "Sourdough bread", "amount": 2,   "unit": "slices"},
-            {"name": "Avocado",         "amount": 1,   "unit": "pcs"},
-            {"name": "Eggs",            "amount": 2,   "unit": "pcs"},
-            {"name": "Lemon juice",     "amount": 1,   "unit": "tbsp"},
-            {"name": "Chilli flakes",   "amount": 0.5, "unit": "tsp"},
-            {"name": "Salt",            "amount": 1,   "unit": "pinch"},
-            {"name": "Olive oil",       "amount": 1,   "unit": "tbsp"},
+        "title": "Clinic Compass",
+        "description": "A patient journey board that coordinates appointment prep, follow-up tasks, and educational reminders.",
+        "sector": Sector.HEALTH,
+        "team_size": 3,
+        "discovery_weeks": 4,
+        "build_weeks": 7,
+        "resource_needs": [
+            {"name": "Workflow interviews", "effort": 18, "unit": "hours"},
+            {"name": "Patient messaging design", "effort": 12, "unit": "hours"},
+            {"name": "Compliance review", "effort": 8, "unit": "hours"},
         ],
-        "steps": [
-            "Toast the sourdough slices until golden and crispy.",
-            "Halve and pit the avocado. Scoop the flesh into a bowl, add lemon "
-            "juice and a pinch of salt, then roughly mash with a fork.",
-            "Bring a small saucepan of water to a gentle simmer. Add a dash of "
-            "vinegar. Crack each egg into a small cup and gently lower into the "
-            "water. Poach for 3 minutes for a runny yolk.",
-            "Spread the smashed avocado on the toast, drizzle with olive oil, "
-            "top with the poached egg and sprinkle with chilli flakes.",
+        "milestones": [
+            "Document the highest-friction patient touchpoints.",
+            "Pilot reminder sequences with one outpatient clinic.",
+            "Refine follow-up analytics based on missed-appointment data.",
         ],
     },
     {
         "author": "bob",
-        "title": "Chocolate Lava Cake",
-        "description": (
-            "Individual warm chocolate cakes with a gooey molten centre — "
-            "a classic dinner-party showstopper."
-        ),
-        "category": Category.DESSERT,
-        "servings": 4,
-        "prep_time": 15,
-        "cook_time": 12,
-        "ingredients": [
-            {"name": "Dark chocolate (70%)", "amount": 200, "unit": "g"},
-            {"name": "Butter",               "amount": 100, "unit": "g"},
-            {"name": "Eggs",                 "amount": 4,   "unit": "pcs"},
-            {"name": "Egg yolks",            "amount": 2,   "unit": "pcs"},
-            {"name": "Caster sugar",         "amount": 80,  "unit": "g"},
-            {"name": "Plain flour",          "amount": 40,  "unit": "g"},
-            {"name": "Cocoa powder",         "amount": 1,   "unit": "tbsp"},
+        "title": "Studio Class Loop",
+        "description": "A creative academy portal that turns workshop ideas into repeatable learning programs with live mentor feedback.",
+        "sector": Sector.EDUCATION,
+        "team_size": 4,
+        "discovery_weeks": 3,
+        "build_weeks": 4,
+        "resource_needs": [
+            {"name": "Curriculum design", "effort": 20, "unit": "hours"},
+            {"name": "Mentor recruitment", "effort": 10, "unit": "hours"},
+            {"name": "Demo content production", "effort": 15, "unit": "hours"},
         ],
-        "steps": [
-            "Preheat your oven to 200 °C. Butter four ramekins and dust them "
-            "with cocoa powder.",
-            "Melt the chocolate and butter together in a heatproof bowl over "
-            "simmering water (bain-marie), stirring until smooth. Let cool slightly.",
-            "In a large bowl, whisk the eggs, egg yolks, and sugar until the "
-            "mixture is pale and slightly thickened.",
-            "Fold the chocolate mixture into the egg mixture, then sift in the "
-            "flour and fold gently until just combined.",
-            "Divide the batter evenly between the prepared ramekins.",
-            "Bake for 10-12 minutes until the edges are set but the centre is "
-            "still slightly wobbly.",
-            "Run a knife around the edge and carefully invert onto serving plates. "
-            "Serve immediately with a scoop of vanilla ice cream.",
+        "milestones": [
+            "Define the first three workshop tracks and target outcomes.",
+            "Create mentor dashboards for feedback and attendance.",
+            "Open the pilot cohort and measure completion quality.",
         ],
     },
     {
         "author": "alice",
-        "title": "Greek Salad",
-        "description": (
-            "Fresh, vibrant salad with tomatoes, cucumber, olives, "
-            "and creamy feta — ready in 10 minutes."
-        ),
-        "category": Category.LUNCH,
-        "servings": 2,
-        "prep_time": 10,
-        "cook_time": 0,
-        "ingredients": [
-            {"name": "Cherry tomatoes",  "amount": 200, "unit": "g"},
-            {"name": "Cucumber",         "amount": 1,   "unit": "pcs"},
-            {"name": "Red onion",        "amount": 0.5, "unit": "pcs"},
-            {"name": "Kalamata olives",  "amount": 80,  "unit": "g"},
-            {"name": "Feta cheese",      "amount": 150, "unit": "g"},
-            {"name": "Olive oil",        "amount": 3,   "unit": "tbsp"},
-            {"name": "Red wine vinegar", "amount": 1,   "unit": "tbsp"},
-            {"name": "Dried oregano",    "amount": 1,   "unit": "tsp"},
+        "title": "City Storyline",
+        "description": "A cultural discovery platform that links local venues, hidden histories, and themed walking experiences.",
+        "sector": Sector.CULTURE,
+        "team_size": 3,
+        "discovery_weeks": 2,
+        "build_weeks": 6,
+        "resource_needs": [
+            {"name": "Archive research", "effort": 14, "unit": "hours"},
+            {"name": "Route curation", "effort": 12, "unit": "hours"},
+            {"name": "Mobile interaction design", "effort": 18, "unit": "hours"},
         ],
-        "steps": [
-            "Halve the cherry tomatoes and slice the cucumber into half-moons. "
-            "Thinly slice the red onion.",
-            "Combine the tomatoes, cucumber, onion, and olives in a large bowl.",
-            "Whisk together the olive oil, red wine vinegar, and oregano to make "
-            "the dressing.",
-            "Pour the dressing over the salad and toss gently.",
-            "Top with a block or crumbled slices of feta cheese and serve immediately.",
+        "milestones": [
+            "Curate the first story route with three venue partners.",
+            "Prototype map-driven audio interactions on mobile.",
+            "Test the guided route with local visitors and students.",
         ],
     },
     {
         "author": "bob",
-        "title": "Mango Lassi",
-        "description": (
-            "A cool and creamy Indian yoghurt drink blended with "
-            "ripe mango and a hint of cardamom."
-        ),
-        "category": Category.DRINK,
-        "servings": 2,
-        "prep_time": 5,
-        "cook_time": 0,
-        "ingredients": [
-            {"name": "Ripe mango",    "amount": 1,    "unit": "pcs"},
-            {"name": "Plain yoghurt", "amount": 250,  "unit": "ml"},
-            {"name": "Milk",          "amount": 100,  "unit": "ml"},
-            {"name": "Sugar",         "amount": 2,    "unit": "tbsp"},
-            {"name": "Cardamom",      "amount": 0.25, "unit": "tsp"},
-            {"name": "Ice cubes",     "amount": 4,    "unit": "pcs"},
+        "title": "Focus Flow Desk",
+        "description": "A lightweight operations cockpit for managers who want daily priorities, blockers, and follow-ups in one place.",
+        "sector": Sector.PRODUCTIVITY,
+        "team_size": 4,
+        "discovery_weeks": 2,
+        "build_weeks": 5,
+        "resource_needs": [
+            {"name": "Process mapping", "effort": 10, "unit": "hours"},
+            {"name": "Automation rules", "effort": 14, "unit": "hours"},
+            {"name": "Executive dashboard", "effort": 20, "unit": "hours"},
         ],
-        "steps": [
-            "Peel the mango and cut the flesh away from the stone.",
-            "Place the mango, yoghurt, milk, sugar, and cardamom in a blender.",
-            "Add the ice cubes and blend on high until completely smooth.",
-            "Taste and adjust sweetness if needed. Pour into tall glasses "
-            "and serve immediately.",
+        "milestones": [
+            "Identify the key signals managers need each morning.",
+            "Launch blocker tracking and follow-up automation.",
+            "Review adoption metrics with the pilot operations team.",
         ],
     },
 ]
 
 
 def seed_database() -> None:
-    """
-    Insert demo users and sample recipes into the database if it is empty.
-
-    This function is called once at application startup.
-    It does nothing if the database already contains recipes.
-    """
+    """Insert demo users and sample venture briefs when the database is empty."""
     with SessionLocal() as db:
-        existing = RecipeService.get_all(db)
-        if existing:
-            return  # Already seeded — skip
+        if VentureService.get_all(db):
+            return
 
-        # 1. Create demo users
         user_map: dict[str, int] = {}
-        for u in SEED_USERS:
-            # Skip if the user already exists (e.g. after a partial seed)
-            existing_user = db.query(User).filter(
-                User.username == u["username"]
-            ).first()
+        for entry in SEED_USERS:
+            existing_user = db.query(User).filter(User.username == entry["username"]).first()
             if existing_user:
-                user_map[u["username"]] = existing_user.id
-            else:
-                user = UserService.register(
-                    db,
-                    username=u["username"],
-                    email=u["email"],
-                    password=u["password"],
-                    bio=u["bio"],
-                )
-                user_map[u["username"]] = user.id
+                user_map[entry["username"]] = existing_user.id
+                continue
+            user = UserService.register(
+                db,
+                username=entry["username"],
+                email=entry["email"],
+                password=entry["password"],
+                bio=entry["bio"],
+            )
+            user_map[entry["username"]] = user.id
 
-        # 2. Create sample recipes, attributed to their authors
-        for recipe_data in SEED_RECIPES:
-            author_username = recipe_data.get("author")
-            uid = user_map.get(author_username) if author_username else None
-            RecipeService.create(
+        for venture_data in SEED_VENTURES:
+            VentureService.create(
                 db=db,
-                title=recipe_data["title"],
-                description=recipe_data["description"],
-                category=recipe_data["category"],
-                servings=recipe_data["servings"],
-                prep_time=recipe_data["prep_time"],
-                cook_time=recipe_data["cook_time"],
-                ingredients=recipe_data["ingredients"],
-                steps=recipe_data["steps"],
-                user_id=uid,
+                title=venture_data["title"],
+                description=venture_data["description"],
+                sector=venture_data["sector"],
+                team_size=venture_data["team_size"],
+                discovery_weeks=venture_data["discovery_weeks"],
+                build_weeks=venture_data["build_weeks"],
+                resource_needs=venture_data["resource_needs"],
+                milestones=venture_data["milestones"],
+                user_id=user_map.get(venture_data.get("author")),
             )
 
     print(
-        f"Database seeded with {len(SEED_USERS)} demo users "
-        f"and {len(SEED_RECIPES)} sample recipes."
+        f"Database seeded with {len(SEED_USERS)} demo users and "
+        f"{len(SEED_VENTURES)} sample ventures."
     )
