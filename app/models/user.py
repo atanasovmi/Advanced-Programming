@@ -9,7 +9,7 @@ has a public profile page showing their contributions.
 
 import hashlib
 import os
-from datetime import datetime
+from datetime import datetime, timezone
 from sqlalchemy import Column, Integer, String, Text, DateTime
 from sqlalchemy.orm import relationship
 from app.models.database import Base
@@ -38,7 +38,9 @@ class User(Base):
     email         = Column(String(200), nullable=False, unique=True, index=True)
     password_hash = Column(String(200), nullable=False)
     bio           = Column(Text, nullable=False, default="")
-    created_at    = Column(DateTime, default=datetime.utcnow, nullable=False)
+    created_at    = Column(
+        DateTime, default=lambda: datetime.now(timezone.utc), nullable=False,
+    )
 
     recipes   = relationship(
         "Recipe",   back_populates="author",

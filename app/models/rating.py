@@ -7,7 +7,7 @@ Users can leave a star rating (1–5) and an optional comment
 for any recipe. Multiple ratings per recipe are allowed.
 """
 
-from datetime import datetime
+from datetime import datetime, timezone
 from sqlalchemy import Column, Integer, Text, DateTime, ForeignKey, CheckConstraint
 from sqlalchemy.orm import relationship
 from app.models.database import Base
@@ -37,7 +37,9 @@ class Rating(Base):
     recipe_id = Column(Integer, ForeignKey("recipes.id"), nullable=False)
     score = Column(Integer, nullable=False)
     comment = Column(Text, nullable=False, default="")
-    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+    created_at = Column(
+        DateTime, default=lambda: datetime.now(timezone.utc), nullable=False,
+    )
 
     recipe = relationship("Recipe", back_populates="ratings")
 

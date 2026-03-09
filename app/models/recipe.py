@@ -8,7 +8,7 @@ It owns a list of Ingredients, ordered Steps, and user Ratings.
 """
 
 import enum
-from datetime import datetime
+from datetime import datetime, timezone
 from sqlalchemy import Column, Integer, String, Text, DateTime, Enum, ForeignKey
 from sqlalchemy.orm import relationship
 from app.models.database import Base
@@ -52,7 +52,9 @@ class Recipe(Base):
     servings = Column(Integer, nullable=False, default=2)
     prep_time = Column(Integer, nullable=False, default=0)   # minutes
     cook_time = Column(Integer, nullable=False, default=0)   # minutes
-    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+    created_at = Column(
+        DateTime, default=lambda: datetime.now(timezone.utc), nullable=False,
+    )
 
     # Optional link to the user who created this recipe.
     # NULL means the recipe was added anonymously / seeded.
